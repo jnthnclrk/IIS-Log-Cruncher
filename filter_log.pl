@@ -69,7 +69,10 @@ my $log_filter = new MyLiteLogFilter( {
 				} );
 						
 my $stats = {
-	start_time => time()				# Record start time.
+	start_time => time(),				# Record start time.
+	warnings => {
+		bad_input_records => 0			# Counter for bad input records
+		}
 };
 
 # Input stream is processed one line at a time.  We assume that multiple log files
@@ -160,6 +163,7 @@ $opt_verbose &&
 			"Input lines processed:\t" . $stats->{lines}->{total},
 			"Comment headers:\t" . $stats->{comment_blocks}->{total},
 			"Data rows processed:\t" . $stats->{lines}->{data},
+			"Invalid data rows skipped:\t" . $stats->{warnings}->{bad_input_records},
 			"Filtered rows kept:\t" . $stats->{lines}->{kept}
 			), "\n\n";
 	
@@ -771,6 +775,10 @@ sub import_script {
 		print $output_stream_handle_varname "#Fields:  $output_canon_fld_names_as_string\\n";
 		
 		my ( $input_canon_fld_vars_as_string );
+		my \@expected_input_fields = ( $input_canon_fld_vars_as_string );
+		my \$num_expected_input_fields = scalar \@expected_input_fields;
+		my \@current_input_fields;
+		my \$num_current_input_fields;
 		
 		while ( $input_buff_varname !~ /^\\s*#/ ) {
 			${stats_varname}->{lines}->{total} += 1;
@@ -782,9 +790,15 @@ sub import_script {
 					${stats_varname}->{lines}->{data} % 1000 == 0 &&
 						printf STDERR "---> Data row %10d\\r", ${stats_varname}->{lines}->{data};
 						
-				( $input_canon_fld_vars_as_string ) = split('$input_separator', $input_buff_varname);
+				\@current_input_fields = ( $input_canon_fld_vars_as_string ) = split('$input_separator', $input_buff_varname);
+				\$num_current_input_fields = scalar \@current_input_fields;
 				
-				if ( $filters_as_string ) {
+				if ( \$num_current_input_fields != \$num_expected_input_fields ) {
+					warn "$0:  Wrong number of fields (", \$num_current_input_fields, 
+						") in input row (line #", ${stats_varname}->{lines}->{total}, ").  \n",
+						"Skipping... FLDS = (", join(', ', \@current_input_fields), ").\n";
+					${stats_varname}->{warnings}->{bad_input_records} += 1;
+				 } elsif ( $filters_as_string ) {
 					${stats_varname}->{lines}->{kept} += 1;
 					${opt_varname_prefix}print_line_numbers && 
 						print $output_stream_handle_varname ${stats_varname}->{lines}->{total}, ':';

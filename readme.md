@@ -11,7 +11,6 @@ recursively
 * sanity_check.sh — a set of commands to check for verification
 
 ## Requirements
------------
 
 *  Unix platform, preferably Linux or Cygwin for Windows that includes:
     * Perl 5.8 or newer
@@ -22,7 +21,6 @@ under Cygwin and all Linux flavours
     * A decent command shell (e.g. "bash")
 
 ## Usage
------------
 
 ### Simple
 
@@ -53,7 +51,6 @@ Start the process for real...
     perl process_arch.pl --filter-log
     
 ## Error checking
------------
     
 ### Simple sanity checks
 
@@ -94,6 +91,5 @@ If I certain line number is problematic you can use the following command to fin
     unzip -p dailyarchive.zip | egrep -n '.*'  | egrep '^(LINENUM1|LINENUM2):'
 
 ## Performance
------------
 
 On a 2009 MacBook Pro we were able to process around 70,000 lines per second.
